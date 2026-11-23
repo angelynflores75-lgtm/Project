@@ -1,15 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import '../styles/auth.css'
-
-function readUsers() {
-  try {
-    const users = JSON.parse(localStorage.getItem('skwela_users') || '[]')
-    return Array.isArray(users) ? users : []
-  } catch {
-    return []
-  }
-}
+import { apiRequest } from '../services/api'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -22,7 +14,7 @@ export default function Register() {
     setError('')
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.name.trim()) {
       setError('Please enter your full name.')
@@ -37,30 +29,20 @@ export default function Register() {
       return
     }
     setLoading(true)
+    setError('')
     try {
-      const email = form.email.trim().toLowerCase()
-      const users = readUsers()
-      if (users.find((user) => typeof user.email === 'string' &&
-        user.email.trim().toLowerCase() === email)) {
-        throw new Error('An account with that email already exists.')
-      }
-
-      const newUser = {
-        id: Date.now(),
-        name: form.name.trim(),
-        email,
-        password: form.password,
-      }
-      users.push(newUser)
-      localStorage.setItem('skwela_users', JSON.stringify(users))
-      localStorage.setItem('skwela_user', JSON.stringify({
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-      }))
+      const user = await apiRequest('/api/auth/register', {
+        method: 'POST',
+        body: {
+          name: form.name.trim(),
+          email: form.email.trim(),
+          password: form.password,
+        },
+      })
+      localStorage.setItem('skwela_user', JSON.stringify(user))
       navigate('/homepage')
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Unable to create account.')
     } finally {
       setLoading(false)
     }

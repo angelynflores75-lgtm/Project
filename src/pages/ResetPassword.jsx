@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../styles/auth.css'
+import { apiRequest } from '../services/api'
 
 const STEP = { EMAIL: 'email', NEW_PASSWORD: 'new_password', DONE: 'done' }
 
 export default function ResetPassword() {
   const [step, setStep] = useState(STEP.EMAIL)
   const [email, setEmail] = useState('')
-  const [form, setForm] = useState({ newPassword: '', confirm: '' })
+  const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirm: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -19,23 +20,11 @@ export default function ResetPassword() {
       setError('Please enter your email address.')
       return
     }
-    // In a real app this would send an email. Here we verify the account exists.
-    let users = []
-    try {
-      const storedUsers = JSON.parse(localStorage.getItem('skwela_users') || '[]')
-      users = Array.isArray(storedUsers) ? storedUsers : []
-    } catch {
-      users = []
-    }
-    if (!users.find((u) => typeof u.email === 'string' && u.email.trim().toLowerCase() === normalizedEmail)) {
-      setError('No account found with that email.')
-      return
-    }
     setEmail(normalizedEmail)
     setStep(STEP.NEW_PASSWORD)
   }
 
-  function handlePasswordSubmit(e) {
+  async function handlePasswordSubmit(e) {
     e.preventDefault()
     setError('')
     if (form.newPassword !== form.confirm) {
@@ -47,24 +36,19 @@ export default function ResetPassword() {
       return
     }
     setLoading(true)
+    setError('')
     try {
-      let users = []
-      try {
-        const storedUsers = JSON.parse(localStorage.getItem('skwela_users') || '[]')
-        users = Array.isArray(storedUsers) ? storedUsers : []
-      } catch {
-        users = []
-      }
-      const index = users.findIndex((user) =>
-        typeof user.email === 'string' &&
-        user.email.trim().toLowerCase() === email
-      )
-      if (index === -1) throw new Error('No account found with that email.')
-      users[index].password = form.newPassword
-      localStorage.setItem('skwela_users', JSON.stringify(users))
+      await apiRequest('/api/auth/password', {
+        method: 'POST',
+        body: {
+          email,
+          currentPassword: form.currentPassword,
+          newPassword: form.newPassword,
+        },
+      })
       setStep(STEP.DONE)
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Unable to update password.')
     } finally {
       setLoading(false)
     }
@@ -80,8 +64,8 @@ export default function ResetPassword() {
 
         {step === STEP.EMAIL && (
           <>
-            <h1 className="title">Reset your password</h1>
-            <p className="subtitle">Enter your email and we'll set a new password</p>
+            <h1 className="title">Change your password</h1>
+            <p className="subtitle">Enter your account email to continue</p>
             <form onSubmit={handleEmailSubmit} className="form" noValidate>
               {error && <div className="error" role="alert">{error}</div>}
               <div className="field">
@@ -105,10 +89,23 @@ export default function ResetPassword() {
 
         {step === STEP.NEW_PASSWORD && (
           <>
-            <h1 className="title">Set a new password</h1>
-            <p className="subtitle">Choose a strong password for <strong>{email}</strong></p>
+            <h1 className="title">Verify and change password</h1>
+            <p className="subtitle">Confirm your current password for <strong>{email}</strong></p>
             <form onSubmit={handlePasswordSubmit} className="form" noValidate>
               {error && <div className="error" role="alert">{error}</div>}
+              <div className="field">
+                <label htmlFor="reset-current-password" className="label">Current password</label>
+                <input
+                  id="reset-current-password"
+                  name="currentPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  className="input"
+                  value={form.currentPassword}
+                  onChange={(e) => { setForm((f) => ({ ...f, currentPassword: e.target.value })); setError('') }}
+                />
+              </div>
               <div className="field">
                 <label htmlFor="reset-new-password" className="label">New password</label>
                 <input

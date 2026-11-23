@@ -1,16 +1,27 @@
-# React + Vite
+# Skwela Ta
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## Run the application
 
-Currently, two official plugins are available:
+1. Copy `backend/.env.example` to `backend/.env`.
+2. Start the API with `npm run backend`.
+3. In another terminal, start the frontend with `npm run dev`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The backend connects to the configured SQL Server and creates `dbo.USERS` if it
+does not exist. For an existing `dbo.USERS` table, it adds a nullable
+`password_hash` column when needed. The SQL account needs permission to create
+the table or alter it, as applicable.
 
-## React Compiler
+The default local configuration uses `localhost` on TCP port `14330` and does
+not require SQL Server Browser. In SQL Server Configuration Manager, enable
+TCP/IP for the `SQLEXPRESS` instance, set **IP Addresses > IPAll > TCP Port** to
+`14330`, clear **TCP Dynamic Ports**, and restart SQL Server (SQLEXPRESS).
+The default `DB_AUTH=windows` uses Windows Integrated Authentication; run the
+backend as a Windows user that has access to `DB_FP`. To use SQL authentication,
+set `DB_AUTH=sql` and provide `DB_USER` and `DB_PASSWORD` in `backend/.env`.
+If you choose a different static port, use that same port in both SQL Server
+Configuration Manager and `DB_PORT`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Registration, login, and password changes use the backend API. Password changes
+verify the current password. Passwords are stored as scrypt hashes; SQL
+credentials must remain in the backend environment file and must never be added
+to frontend code.

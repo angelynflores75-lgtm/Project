@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import '../styles/auth.css'
+import { apiRequest } from '../services/api'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -13,32 +14,19 @@ export default function Login() {
     setError('')
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
+    setError('')
     try {
-      let users = []
-      try {
-        const storedUsers = JSON.parse(localStorage.getItem('skwela_users') || '[]')
-        users = Array.isArray(storedUsers) ? storedUsers : []
-      } catch {
-        users = []
-      }
-      const email = form.email.trim().toLowerCase()
-      const found = users.find((user) =>
-        typeof user.email === 'string' &&
-        user.email.trim().toLowerCase() === email &&
-        user.password === form.password
-      )
-      if (!found) throw new Error('Invalid email or password.')
-      localStorage.setItem('skwela_user', JSON.stringify({
-        id: found.id,
-        name: found.name,
-        email: found.email,
-      }))
+      const user = await apiRequest('/api/auth/login', {
+        method: 'POST',
+        body: { email: form.email.trim(), password: form.password },
+      })
+      localStorage.setItem('skwela_user', JSON.stringify(user))
       navigate('/homepage')
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Unable to sign in.')
     } finally {
       setLoading(false)
     }
@@ -75,7 +63,7 @@ export default function Login() {
           <div className="field">
             <label htmlFor="login-password" className="label">
               Password
-              <Link to="/reset-password" className="labelLink">Forgot password?</Link>
+              <Link to="/reset-password" className="labelLink">Change password?</Link>
             </label>
             <input
               id="login-password"

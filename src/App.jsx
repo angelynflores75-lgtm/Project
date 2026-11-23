@@ -1,78 +1,77 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import Register from './pages/Register'
-import Login from './pages/Login'
-import ResetPassword from './pages/ResetPassword'
-import Homepage from './pages/Homepage'
+import { Routes, Route, Navigate } from "react-router-dom";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
+import Homepage from "./pages/Homepage";
 
 function PrivateRoute({ children }) {
-  let user = null
+  let user = null;
   try {
-    user = JSON.parse(localStorage.getItem('skwela_user'))
+    user = JSON.parse(localStorage.getItem("skwela_user"));
   } catch {
-    localStorage.removeItem('skwela_user')
+    localStorage.removeItem("skwela_user");
   }
-  return user ? children : <Navigate to="/login" replace />
+  return user ? children : <Navigate to="/login" replace />;
 }
 
 function GuestRoute({ children }) {
-  let user = null
+  let user = null;
   try {
-    user = JSON.parse(localStorage.getItem('skwela_user'))
+    user = JSON.parse(localStorage.getItem("skwela_user"));
   } catch {
-    localStorage.removeItem('skwela_user')
+    localStorage.removeItem("skwela_user");
   }
-  return user ? <Navigate to="/homepage" replace /> : children
+  return user ? <Navigate to="/homepage" replace /> : children;
 }
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+    <>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-      <Route
-        path="/signup"
-        element={
-          <GuestRoute>
-            <Register />
-          </GuestRoute>
-        }
-      />
+        <Route
+          path="/signup"
+          element={
+            <GuestRoute>
+              <Register />
+            </GuestRoute>
+          }
+        />
 
-      <Route
-        path="/register"
-        element={<Navigate to="/signup" replace />}
-      />
+        <Route path="/register" element={<Navigate to="/signup" replace />} />
 
-      <Route
-        path="/login"
-        element={
-          <GuestRoute>
-            <Login />
-          </GuestRoute>
-        }
-      />
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          }
+        />
 
-      <Route
-        path="/reset-password"
-        element={
-          <GuestRoute>
-            <ResetPassword />
-          </GuestRoute>
-        }
-      />
+        <Route
+          path="/reset-password"
+          element={
+            <GuestRoute>
+              <ResetPassword />
+            </GuestRoute>
+          }
+        />
 
-      <Route
-        path="/homepage"
-        element={
-          <PrivateRoute>
-            <Homepage />
-          </PrivateRoute>
-        }
-      />
+        <Route
+          path="/homepage"
+          element={
+            <PrivateRoute>
+              <Homepage />
+            </PrivateRoute>
+          }
+        />
 
-      <Route path="/dashboard" element={<Navigate to="/homepage" replace />} />
+        <Route path="/dashboard" element={<Navigate to="/homepage" replace />} />
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
-  )
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </>
+  );
 }
