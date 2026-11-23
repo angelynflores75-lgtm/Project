@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import styles from './Auth.module.css'
+import '../styles/auth.css'
 
 const STEP = { EMAIL: 'email', NEW_PASSWORD: 'new_password', DONE: 'done' }
 
 export default function ResetPassword() {
-  const { resetPassword } = useAuth()
   const [step, setStep] = useState(STEP.EMAIL)
   const [email, setEmail] = useState('')
   const [form, setForm] = useState({ newPassword: '', confirm: '' })
@@ -16,12 +14,24 @@ export default function ResetPassword() {
   function handleEmailSubmit(e) {
     e.preventDefault()
     setError('')
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail) {
+      setError('Please enter your email address.')
+      return
+    }
     // In a real app this would send an email. Here we verify the account exists.
-    const users = JSON.parse(localStorage.getItem('skwela_users') || '[]')
-    if (!users.find((u) => u.email === email)) {
+    let users = []
+    try {
+      const storedUsers = JSON.parse(localStorage.getItem('skwela_users') || '[]')
+      users = Array.isArray(storedUsers) ? storedUsers : []
+    } catch {
+      users = []
+    }
+    if (!users.find((u) => typeof u.email === 'string' && u.email.trim().toLowerCase() === normalizedEmail)) {
       setError('No account found with that email.')
       return
     }
+    setEmail(normalizedEmail)
     setStep(STEP.NEW_PASSWORD)
   }
 
@@ -38,7 +48,20 @@ export default function ResetPassword() {
     }
     setLoading(true)
     try {
-      resetPassword({ email, newPassword: form.newPassword })
+      let users = []
+      try {
+        const storedUsers = JSON.parse(localStorage.getItem('skwela_users') || '[]')
+        users = Array.isArray(storedUsers) ? storedUsers : []
+      } catch {
+        users = []
+      }
+      const index = users.findIndex((user) =>
+        typeof user.email === 'string' &&
+        user.email.trim().toLowerCase() === email
+      )
+      if (index === -1) throw new Error('No account found with that email.')
+      users[index].password = form.newPassword
+      localStorage.setItem('skwela_users', JSON.stringify(users))
       setStep(STEP.DONE)
     } catch (err) {
       setError(err.message)
@@ -48,72 +71,73 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={styles.brand}>
-          <span className={styles.brandIcon}>🎓</span>
-          <span className={styles.brandName}>Skwela Ta</span>
+    <div className="page">
+      <div className="card">
+        <div className="brand">
+          <span className="brandIcon">🎓</span>
+          <span className="brandName">Skwela Ta</span>
         </div>
 
         {step === STEP.EMAIL && (
           <>
-            <h1 className={styles.title}>Reset your password</h1>
-            <p className={styles.subtitle}>Enter your email and we'll set a new password</p>
-            <form onSubmit={handleEmailSubmit} className={styles.form} noValidate>
-              {error && <div className={styles.error} role="alert">{error}</div>}
-              <div className={styles.field}>
-                <label htmlFor="email" className={styles.label}>Email address</label>
+            <h1 className="title">Reset your password</h1>
+            <p className="subtitle">Enter your email and we'll set a new password</p>
+            <form onSubmit={handleEmailSubmit} className="form" noValidate>
+              {error && <div className="error" role="alert">{error}</div>}
+              <div className="field">
+                <label htmlFor="reset-email" className="label">Email address</label>
                 <input
-                  id="email"
+                  id="reset-email"
+                  name="email"
                   type="email"
                   autoComplete="email"
                   required
-                  className={styles.input}
+                  className="input"
                   placeholder="juan@example.com"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setError('') }}
                 />
               </div>
-              <button type="submit" className={styles.btn}>Continue</button>
+              <button type="submit" className="btn">Continue</button>
             </form>
           </>
         )}
 
         {step === STEP.NEW_PASSWORD && (
           <>
-            <h1 className={styles.title}>Set a new password</h1>
-            <p className={styles.subtitle}>Choose a strong password for <strong>{email}</strong></p>
-            <form onSubmit={handlePasswordSubmit} className={styles.form} noValidate>
-              {error && <div className={styles.error} role="alert">{error}</div>}
-              <div className={styles.field}>
-                <label htmlFor="newPassword" className={styles.label}>New password</label>
+            <h1 className="title">Set a new password</h1>
+            <p className="subtitle">Choose a strong password for <strong>{email}</strong></p>
+            <form onSubmit={handlePasswordSubmit} className="form" noValidate>
+              {error && <div className="error" role="alert">{error}</div>}
+              <div className="field">
+                <label htmlFor="reset-new-password" className="label">New password</label>
                 <input
-                  id="newPassword"
+                  id="reset-new-password"
                   name="newPassword"
                   type="password"
                   autoComplete="new-password"
                   required
-                  className={styles.input}
+                  className="input"
                   placeholder="At least 8 characters"
                   value={form.newPassword}
                   onChange={(e) => { setForm((f) => ({ ...f, newPassword: e.target.value })); setError('') }}
                 />
               </div>
-              <div className={styles.field}>
-                <label htmlFor="confirm" className={styles.label}>Confirm new password</label>
+              <div className="field">
+                <label htmlFor="reset-confirm-password" className="label">Confirm new password</label>
                 <input
-                  id="confirm"
+                  id="reset-confirm-password"
                   name="confirm"
                   type="password"
                   autoComplete="new-password"
                   required
-                  className={styles.input}
+                  className="input"
                   placeholder="Repeat your password"
                   value={form.confirm}
                   onChange={(e) => { setForm((f) => ({ ...f, confirm: e.target.value })); setError('') }}
                 />
               </div>
-              <button type="submit" className={styles.btn} disabled={loading}>
+              <button type="submit" className="btn" disabled={loading}>
                 {loading ? 'Saving…' : 'Save new password'}
               </button>
             </form>
@@ -121,20 +145,20 @@ export default function ResetPassword() {
         )}
 
         {step === STEP.DONE && (
-          <div className={styles.successBlock}>
-            <div className={styles.successIcon}>✓</div>
-            <h1 className={styles.title}>Password updated</h1>
-            <p className={styles.subtitle}>Your password has been changed successfully.</p>
-            <Link to="/login" className={styles.btn} style={{ display: 'block', textAlign: 'center', marginTop: '24px' }}>
+          <div className="successBlock">
+            <div className="successIcon">✓</div>
+            <h1 className="title">Password updated</h1>
+            <p className="subtitle">Your password has been changed successfully.</p>
+            <Link to="/login" className="btn" style={{ display: 'block', textAlign: 'center', marginTop: '24px' }}>
               Back to sign in
             </Link>
           </div>
         )}
 
         {step !== STEP.DONE && (
-          <p className={styles.foot}>
+          <p className="foot">
             Remembered it?{' '}
-            <Link to="/login" className={styles.link}>Sign in</Link>
+            <Link to="/login" className="link">Sign in</Link>
           </p>
         )}
       </div>

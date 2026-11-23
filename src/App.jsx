@@ -1,18 +1,27 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from './context/AuthContext'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import ResetPassword from './pages/ResetPassword'
-import Dashboard from './pages/Dashboard'
+import Homepage from './pages/Homepage'
 
 function PrivateRoute({ children }) {
-  const { user } = useAuth()
+  let user = null
+  try {
+    user = JSON.parse(localStorage.getItem('skwela_user'))
+  } catch {
+    localStorage.removeItem('skwela_user')
+  }
   return user ? children : <Navigate to="/login" replace />
 }
 
 function GuestRoute({ children }) {
-  const { user } = useAuth()
-  return user ? <Navigate to="/dashboard" replace /> : children
+  let user = null
+  try {
+    user = JSON.parse(localStorage.getItem('skwela_user'))
+  } catch {
+    localStorage.removeItem('skwela_user')
+  }
+  return user ? <Navigate to="/homepage" replace /> : children
 }
 
 export default function App() {
@@ -21,12 +30,17 @@ export default function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       <Route
-        path="/register"
+        path="/signup"
         element={
           <GuestRoute>
             <Register />
           </GuestRoute>
         }
+      />
+
+      <Route
+        path="/register"
+        element={<Navigate to="/signup" replace />}
       />
 
       <Route
@@ -48,13 +62,15 @@ export default function App() {
       />
 
       <Route
-        path="/dashboard"
+        path="/homepage"
         element={
           <PrivateRoute>
-            <Dashboard />
+            <Homepage />
           </PrivateRoute>
         }
       />
+
+      <Route path="/dashboard" element={<Navigate to="/homepage" replace />} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

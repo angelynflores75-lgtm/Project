@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import styles from './Auth.module.css'
+import '../styles/auth.css'
 
 export default function Login() {
-  const { login } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
@@ -15,12 +13,30 @@ export default function Login() {
     setError('')
   }
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
     try {
-      login({ email: form.email, password: form.password })
-      navigate('/dashboard')
+      let users = []
+      try {
+        const storedUsers = JSON.parse(localStorage.getItem('skwela_users') || '[]')
+        users = Array.isArray(storedUsers) ? storedUsers : []
+      } catch {
+        users = []
+      }
+      const email = form.email.trim().toLowerCase()
+      const found = users.find((user) =>
+        typeof user.email === 'string' &&
+        user.email.trim().toLowerCase() === email &&
+        user.password === form.password
+      )
+      if (!found) throw new Error('Invalid email or password.')
+      localStorage.setItem('skwela_user', JSON.stringify({
+        id: found.id,
+        name: found.name,
+        email: found.email,
+      }))
+      navigate('/homepage')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -29,59 +45,59 @@ export default function Login() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={styles.brand}>
-          <span className={styles.brandIcon}>🎓</span>
-          <span className={styles.brandName}>Skwela Ta</span>
+    <div className="page">
+      <div className="card">
+        <div className="brand">
+          <span className="brandIcon">🎓</span>
+          <span className="brandName">Skwela Ta</span>
         </div>
-        <h1 className={styles.title}>Welcome back</h1>
-        <p className={styles.subtitle}>Sign in to continue learning</p>
+        <h1 className="title">Welcome back</h1>
+        <p className="subtitle">Sign in to continue learning</p>
 
-        <form onSubmit={handleSubmit} className={styles.form} noValidate>
-          {error && <div className={styles.error} role="alert">{error}</div>}
+        <form onSubmit={handleSubmit} className="form" noValidate>
+          {error && <div className="error" role="alert">{error}</div>}
 
-          <div className={styles.field}>
-            <label htmlFor="email" className={styles.label}>Email address</label>
+          <div className="field">
+            <label htmlFor="login-email" className="label">Email address</label>
             <input
-              id="email"
+              id="login-email"
               name="email"
               type="email"
               autoComplete="email"
               required
-              className={styles.input}
+              className="input"
               placeholder="juan@example.com"
               value={form.email}
               onChange={handleChange}
             />
           </div>
 
-          <div className={styles.field}>
-            <label htmlFor="password" className={styles.label}>
+          <div className="field">
+            <label htmlFor="login-password" className="label">
               Password
-              <Link to="/reset-password" className={styles.labelLink}>Forgot password?</Link>
+              <Link to="/reset-password" className="labelLink">Forgot password?</Link>
             </label>
             <input
-              id="password"
+              id="login-password"
               name="password"
               type="password"
               autoComplete="current-password"
               required
-              className={styles.input}
+              className="input"
               placeholder="Your password"
               value={form.password}
               onChange={handleChange}
             />
           </div>
 
-          <button type="submit" className={styles.btn} disabled={loading}>
+          <button type="submit" className="btn" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
-        <p className={styles.foot}>
+        <p className="foot">
           Don't have an account?{' '}
-          <Link to="/register" className={styles.link}>Create one</Link>
+          <Link to="/signup" className="link">Create one</Link>
         </p>
       </div>
     </div>

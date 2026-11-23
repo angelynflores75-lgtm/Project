@@ -1,10 +1,17 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import styles from './Auth.module.css'
+import '../styles/auth.css'
+
+function readUsers() {
+  try {
+    const users = JSON.parse(localStorage.getItem('skwela_users') || '[]')
+    return Array.isArray(users) ? users : []
+  } catch {
+    return []
+  }
+}
 
 export default function Register() {
-  const { register } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
   const [error, setError] = useState('')
@@ -15,8 +22,12 @@ export default function Register() {
     setError('')
   }
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault()
+    if (!form.name.trim()) {
+      setError('Please enter your full name.')
+      return
+    }
     if (form.password !== form.confirm) {
       setError('Passwords do not match.')
       return
@@ -27,8 +38,27 @@ export default function Register() {
     }
     setLoading(true)
     try {
-      register({ name: form.name, email: form.email, password: form.password })
-      navigate('/dashboard')
+      const email = form.email.trim().toLowerCase()
+      const users = readUsers()
+      if (users.find((user) => typeof user.email === 'string' &&
+        user.email.trim().toLowerCase() === email)) {
+        throw new Error('An account with that email already exists.')
+      }
+
+      const newUser = {
+        id: Date.now(),
+        name: form.name.trim(),
+        email,
+        password: form.password,
+      }
+      users.push(newUser)
+      localStorage.setItem('skwela_users', JSON.stringify(users))
+      localStorage.setItem('skwela_user', JSON.stringify({
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+      }))
+      navigate('/homepage')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -37,86 +67,86 @@ export default function Register() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={styles.brand}>
-          <span className={styles.brandIcon}>🎓</span>
-          <span className={styles.brandName}>Skwela Ta</span>
+    <div className="page">
+      <div className="card">
+        <div className="brand">
+          <span className="brandIcon">🎓</span>
+          <span className="brandName">Skwela Ta</span>
         </div>
-        <h1 className={styles.title}>Create your account</h1>
-        <p className={styles.subtitle}>Start your learning journey today</p>
+        <h1 className="title">Create your account</h1>
+        <p className="subtitle">Start your learning journey today</p>
 
-        <form onSubmit={handleSubmit} className={styles.form} noValidate>
-          {error && <div className={styles.error} role="alert">{error}</div>}
+        <form onSubmit={handleSubmit} className="form" noValidate>
+          {error && <div className="error" role="alert">{error}</div>}
 
-          <div className={styles.field}>
-            <label htmlFor="name" className={styles.label}>Full name</label>
+          <div className="field">
+            <label htmlFor="register-name" className="label">Full name</label>
             <input
-              id="name"
+              id="register-name"
               name="name"
               type="text"
               autoComplete="name"
               required
-              className={styles.input}
+              className="input"
               placeholder="Juan dela Cruz"
               value={form.name}
               onChange={handleChange}
             />
           </div>
 
-          <div className={styles.field}>
-            <label htmlFor="email" className={styles.label}>Email address</label>
+          <div className="field">
+            <label htmlFor="register-email" className="label">Email address</label>
             <input
-              id="email"
+              id="register-email"
               name="email"
               type="email"
               autoComplete="email"
               required
-              className={styles.input}
+              className="input"
               placeholder="juan@example.com"
               value={form.email}
               onChange={handleChange}
             />
           </div>
 
-          <div className={styles.field}>
-            <label htmlFor="password" className={styles.label}>Password</label>
+          <div className="field">
+            <label htmlFor="register-password" className="label">Password</label>
             <input
-              id="password"
+              id="register-password"
               name="password"
               type="password"
               autoComplete="new-password"
               required
-              className={styles.input}
+              className="input"
               placeholder="At least 8 characters"
               value={form.password}
               onChange={handleChange}
             />
           </div>
 
-          <div className={styles.field}>
-            <label htmlFor="confirm" className={styles.label}>Confirm password</label>
+          <div className="field">
+            <label htmlFor="register-confirm" className="label">Confirm password</label>
             <input
-              id="confirm"
+              id="register-confirm"
               name="confirm"
               type="password"
               autoComplete="new-password"
               required
-              className={styles.input}
+              className="input"
               placeholder="Repeat your password"
               value={form.confirm}
               onChange={handleChange}
             />
           </div>
 
-          <button type="submit" className={styles.btn} disabled={loading}>
+          <button type="submit" className="btn" disabled={loading}>
             {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
-        <p className={styles.foot}>
+        <p className="foot">
           Already have an account?{' '}
-          <Link to="/login" className={styles.link}>Sign in</Link>
+          <Link to="/login" className="link">Sign in</Link>
         </p>
       </div>
     </div>
