@@ -14,7 +14,7 @@ export default function LoadingPage() {
   }, [navigate])
 
   return (
-    <main className="loading-page" aria-label="Loading Skwela Ta">
+    <main className="loading-page" aria-label=" Loading Skwela Ta">
       <div className="loading-brand">
         <img className="loading-logo" src="/owl-logo.png" alt="Skwela Ta owl mascot" />
         <h1>Skwela Ta</h1>
