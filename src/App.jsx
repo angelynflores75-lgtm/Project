@@ -3,6 +3,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import Homepage from "./pages/Homepage";
+import LoadingPage from "./pages/loadingPage";
 
 function PrivateRoute({ children }) {
   let user = null;
@@ -28,7 +29,7 @@ export default function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<LoadingPage />} />
 
         <Route
           path="/signup"
